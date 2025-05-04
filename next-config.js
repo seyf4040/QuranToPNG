@@ -1,7 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  swcMinify: true,
   // Configure webpack to handle font files
   webpack(config) {
     config.module.rules.push({
@@ -16,6 +15,10 @@ const nextConfig = {
     defaultLocale: 'en',
     localeDetection: true,
   },
+  // Ensure images can be correctly processed
+  images: {
+    domains: ['localhost'],
+  }
 }
 
 module.exports = nextConfig;

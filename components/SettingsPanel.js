@@ -1,6 +1,6 @@
 // components/SettingsPanel.js
 import { useState, useEffect } from 'react';
-import { getQuranicFonts } from '../utils/quranUtils';
+import { getQuranicFonts, getQuranicFontsSync } from '../utils/quranUtils';
 
 const SettingsPanel = ({ 
   quranData,
@@ -10,11 +10,21 @@ const SettingsPanel = ({
 }) => {
   const [surahList, setSurahList] = useState([]);
   const [maxAyahCount, setMaxAyahCount] = useState(7);
-  const [availableFonts, setAvailableFonts] = useState([]);
+  const [availableFonts, setAvailableFonts] = useState(getQuranicFontsSync());
   
-  // Initialize fonts
+  // Initialize fonts using async function
   useEffect(() => {
-    setAvailableFonts(getQuranicFonts());
+    const loadFonts = async () => {
+      try {
+        const fonts = await getQuranicFonts();
+        setAvailableFonts(fonts);
+      } catch (error) {
+        console.error('Error loading fonts:', error);
+        // Keep the default fonts from getQuranicFontsSync
+      }
+    };
+    
+    loadFonts();
   }, []);
   
   // Set up surah list when quran data is loaded
@@ -146,7 +156,7 @@ const SettingsPanel = ({
           >
             {availableFonts.map((font) => (
               <option key={font.name} value={font.name}>
-                {font.name} {font.isSpecialized ? '(Specialized)' : ''}
+                {font.style} {font.isSpecialized ? '(Specialized)' : ''}
               </option>
             ))}
           </select>
@@ -178,18 +188,21 @@ const SettingsPanel = ({
           <label className="block text-sm font-medium mb-1">Text Alignment</label>
           <div className="flex space-x-2">
             <button
+              type="button"
               className={`px-4 py-2 border rounded-md ${settings.textAlign === 'right' ? 'bg-blue-100 border-blue-500' : 'border-gray-300'}`}
               onClick={() => handleSettingChange('textAlign', 'right')}
             >
               Right
             </button>
             <button
+              type="button"
               className={`px-4 py-2 border rounded-md ${settings.textAlign === 'center' ? 'bg-blue-100 border-blue-500' : 'border-gray-300'}`}
               onClick={() => handleSettingChange('textAlign', 'center')}
             >
               Center
             </button>
             <button
+              type="button"
               className={`px-4 py-2 border rounded-md ${settings.textAlign === 'left' ? 'bg-blue-100 border-blue-500' : 'border-gray-300'}`}
               onClick={() => handleSettingChange('textAlign', 'left')}
             >

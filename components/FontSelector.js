@@ -1,30 +1,55 @@
 // components/FontSelector.js
 import { useState, useEffect } from 'react';
-import { getQuranicFonts } from '../utils/quranUtils';
+import { getQuranicFonts, getQuranicFontsSync } from '../utils/quranUtils';
 
 /**
  * Component for selecting and previewing specialized Quranic fonts
- * Provides visual samples of each font and information about their appropriate use
+ * Uses the updated async getQuranicFonts function
  */
 const FontSelector = ({ 
   selectedFont, 
   onFontChange,
   sampleText = 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ'
 }) => {
-  const [fonts, setFonts] = useState([]);
+  const [fonts, setFonts] = useState(getQuranicFontsSync()); // Start with sync version
   const [fontsLoaded, setFontsLoaded] = useState(false);
   const [expandedInfo, setExpandedInfo] = useState(null);
   
-  // Load available Quranic fonts
+  // Load fonts using the async function
   useEffect(() => {
-    setFonts(getQuranicFonts());
+    const loadFonts = async () => {
+      try {
+        const fontData = await getQuranicFonts();
+        setFonts(fontData);
+        
+        // Check if document is available (client-side only)
+        if (typeof window !== 'undefined') {
+          // Try to detect when fonts are actually loaded
+          if ("fonts" in document) {
+            Promise.all(
+              fontData.map(font => 
+                document.fonts.load(`1em '${font.name}'`)
+              )
+            ).then(() => {
+              setFontsLoaded(true);
+            }).catch(err => {
+              console.error('Font loading error:', err);
+              // Still mark as loaded after timeout
+              setTimeout(() => setFontsLoaded(true), 1000);
+            });
+          } else {
+            // Fallback for browsers that don't support the fonts API
+            setTimeout(() => setFontsLoaded(true), 1000);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading fonts:', error);
+        // Fonts will stay as the default synchronous ones
+        setFontsLoaded(true);
+      }
+    };
     
-    // Set a timeout to assume fonts are loaded after a reasonable time
-    const timeout = setTimeout(() => {
-      setFontsLoaded(true);
-    }, 1500);
-    
-    return () => clearTimeout(timeout);
+    loadFonts();
   }, []);
   
   // Toggle expanded information for a font
@@ -38,55 +63,51 @@ const FontSelector = ({
   
   // Get detailed information for each font
   const getFontDetails = (fontName) => {
-    switch (fontName) {
-      case 'KFGQPC Uthmanic Script HAFS':
-        return {
-          description: 'This is the standard Uthmani script used in many modern Quran prints from Saudi Arabia and the Muslim world.',
-          features: ['Traditional Uthmani script', 'Full diacritical marks', 'Standard for many Quran publications'],
-          recommended: true,
-          origin: 'King Fahd Glorious Quran Printing Complex'
-        };
-        
-      case 'Amiri Quran':
-        return {
-          description: 'A classical Naskh style font optimized for Quranic text with careful attention to details of Quranic typography.',
-          features: ['Naskh style', 'Elegant design', 'Good readability', 'Wide compatibility'],
-          recommended: true,
-          origin: 'Developed by Khaled Hosny'
-        };
-        
-      case 'Scheherazade New':
-        return {
-          description: 'A modern Arabic font with good readability and compatibility. While not specifically designed for Quranic text, it handles it well.',
-          features: ['Modern design', 'Excellent compatibility', 'Clear at smaller sizes'],
-          recommended: false,
-          origin: 'SIL International'
-        };
-        
-      case 'Noto Naskh Arabic':
-        return {
-          description: 'Part of Google\'s Noto font family, designed for broad language support. Good compatibility across platforms.',
-          features: ['Wide platform support', 'Clear at smaller sizes', 'Good for mixed content'],
-          recommended: false,
-          origin: 'Google'
-        };
-        
-      case 'Me Quran':
-        return {
-          description: 'A specialized font developed specifically for Quran display with tajweed marks and proper spacing.',
-          features: ['Tajweed mark support', 'Specialized Quranic spacing', 'Traditional appearance'],
-          recommended: true,
-          origin: 'Developed for Quran publishing'
-        };
-        
-      default:
-        return {
-          description: 'A standard Arabic font.',
-          features: [],
-          recommended: false,
-          origin: 'Unknown'
-        };
+    // Find the font in the fonts array
+    const font = fonts.find(f => f.name === fontName);
+    
+    // Return generic information if the font is not found
+    if (!font) {
+      return {
+        description: 'A standard Arabic font.',
+        features: [],
+        recommended: false,
+        origin: 'Unknown'
+      };
     }
+    
+    // Determine if the font is recommended based on whether it's specialized
+    const isRecommended = font.isSpecialized;
+    
+    // Define features based on font name
+    let features = [];
+    let description = '';
+    let origin = '';
+    
+    if (fontName.includes('Uthmanic')) {
+      features = ['Traditional Uthmani script', 'Full diacritical marks', 'Standard for many Quran publications'];
+      description = 'This is a traditional Uthmani script used in many Quran prints. It features full diacritical marks and follows standard Quranic typography rules.';
+      origin = 'Based on traditional Uthmanic script standards';
+    } else if (fontName.includes('Kufi')) {
+      features = ['Geometric design', 'Traditional Kufi style', 'Decorative appearance'];
+      description = 'A geometric Kufi style font with straight lines and angular features. Often used for decorative Quranic text.';
+      origin = 'Based on classical Kufi script traditions';
+    } else if (fontName.includes('Warsh')) {
+      features = ['Warsh recitation style', 'North African tradition', 'Specialized ligatures'];
+      description = 'A specialized font for the Warsh reading/recitation of the Quran, common in North Africa.';
+      origin = 'Used primarily in North African Quran publications';
+    } else {
+      features = ['Arabic font', 'Good readability'];
+      description = 'A standard Arabic font with good readability and compatibility with Quranic text.';
+      origin = 'Modern Arabic typography';
+    }
+    
+    return {
+      description,
+      features,
+      recommended: isRecommended,
+      origin
+    };
   };
   
   return (
@@ -101,7 +122,7 @@ const FontSelector = ({
       >
         {fonts.map(font => (
           <option key={font.name} value={font.name}>
-            {font.name} {font.isSpecialized ? '(Specialized)' : ''}
+            {font.style} {font.isSpecialized ? '(Specialized)' : ''}
           </option>
         ))}
       </select>
@@ -138,6 +159,7 @@ const FontSelector = ({
                 <h4 className="font-medium">{selectedFont}</h4>
                 
                 <button 
+                  type="button"
                   className="text-blue-600 text-xs flex items-center"
                   onClick={() => toggleFontInfo(selectedFont)}
                 >
@@ -194,8 +216,12 @@ const FontSelector = ({
       {/* Font Comparison */}
       <div className="mt-4">
         <button 
+          type="button"
           className="text-sm text-blue-600 hover:text-blue-800 flex items-center"
-          onClick={() => document.getElementById('font-comparison-modal').classList.toggle('hidden')}
+          onClick={() => {
+            const modal = document.getElementById('font-comparison-modal');
+            if (modal) modal.classList.toggle('hidden');
+          }}
         >
           <svg 
             className="w-4 h-4 mr-1" 
@@ -224,8 +250,12 @@ const FontSelector = ({
           <div className="p-4 border-b border-gray-200 flex justify-between items-center">
             <h3 className="text-lg font-medium">Font Comparison</h3>
             <button
+              type="button"
               className="text-gray-500 hover:text-gray-700"
-              onClick={() => document.getElementById('font-comparison-modal').classList.add('hidden')}
+              onClick={() => {
+                const modal = document.getElementById('font-comparison-modal');
+                if (modal) modal.classList.add('hidden');
+              }}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

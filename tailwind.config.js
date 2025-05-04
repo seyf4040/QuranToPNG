@@ -31,22 +31,9 @@ module.exports = {
         // Special border radius for Quranic decoration
         'quran': '1.5rem',
       },
-      // Support for RTL text alignment
-      textAlign: {
-        'start': 'start',
-        'end': 'end',
-      },
     },
   },
   plugins: [
     require('@tailwindcss/forms'),
   ],
-  // Enable RTL support
-  corePlugins: {
-    preflight: true,
-  },
-  // Support for dir="rtl" attribute
-  experimental: {
-    respectDefaultRingColorOpacity: true,
-  },
-};
+}

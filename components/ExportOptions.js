@@ -1,11 +1,24 @@
 // components/ExportOptions.js
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { exportFunctions, getExportFilename } from '../utils/quranUtils';
+import pngExporter from '../utils/pngExporter';
+import ExportWrapper from './ExportWrapper';
 
-const ExportOptions = ({ elementRef, surah, startAyah, endAyah, width, backgroundOpacity }) => {
+const ExportOptions = ({ elementRef, surah, startAyah, endAyah, width, backgroundOpacity, settings }) => {
   const [loading, setLoading] = useState(false);
   const [exportFormat, setExportFormat] = useState(null);
   const [exportStatus, setExportStatus] = useState(null);
+  
+  // Reference to the export wrapper
+  const exportWrapperRef = useRef(null);
+  
+  // Create a clone of the content for export
+  useEffect(() => {
+    if (elementRef.current && exportWrapperRef.current) {
+      // Update the export wrapper content whenever the original content changes
+      exportWrapperRef.current.innerHTML = elementRef.current.innerHTML;
+    }
+  }, [elementRef.current?.innerHTML]);
   
   // Handle export for different formats
   const handleExport = async (format) => {
@@ -16,13 +29,35 @@ const ExportOptions = ({ elementRef, surah, startAyah, endAyah, width, backgroun
     setExportStatus({ type: 'info', message: `Preparing ${format.toUpperCase()} export...` });
     
     try {
-      let result;
-      const options = { width, backgroundOpacity };
+      // Ensure the export wrapper has the latest content
+      if (exportWrapperRef.current) {
+        exportWrapperRef.current.innerHTML = elementRef.current.innerHTML;
+      }
+      
+      // Create export options with all necessary settings
+      const options = { 
+        width, 
+        backgroundOpacity,
+        fontFamily: settings?.fontFamily,
+        fontSize: settings?.fontSize,
+        textColor: settings?.textColor,
+        backgroundColor: settings?.backgroundColor,
+        textAlign: 'center', // Force center alignment for exports
+      };
+      
+      // Generate filename
       const filename = getExportFilename(surah, startAyah, endAyah);
+      
+      // Export based on selected format
+      let result;
       
       switch (format) {
         case 'png':
-          result = await exportFunctions.toPNG(elementRef, options);
+          // Use our specialized PNG exporter with the export wrapper
+          result = await pngExporter.exportToPNG(
+            exportWrapperRef.current || elementRef.current, 
+            options
+          );
           if (result) {
             downloadFile(result, `${filename}.png`);
             setExportStatus({ type: 'success', message: 'PNG file exported successfully!' });
@@ -30,7 +65,9 @@ const ExportOptions = ({ elementRef, surah, startAyah, endAyah, width, backgroun
           break;
           
         case 'svg':
-          result = await exportFunctions.toSVG(elementRef, options);
+          // Use export wrapper for SVG too
+          const exportRef = { current: exportWrapperRef.current || elementRef.current };
+          result = await exportFunctions.toSVG(exportRef, options);
           if (result) {
             downloadFile(result, `${filename}.svg`);
             setExportStatus({ type: 'success', message: 'SVG file exported successfully!' });
@@ -38,7 +75,9 @@ const ExportOptions = ({ elementRef, surah, startAyah, endAyah, width, backgroun
           break;
           
         case 'pdf':
-          result = await exportFunctions.toPDF(elementRef, options);
+          // Use export wrapper for PDF
+          const pdfRef = { current: exportWrapperRef.current || elementRef.current };
+          result = await exportFunctions.toPDF(pdfRef, options);
           if (result) {
             result.save(`${filename}.pdf`);
             setExportStatus({ type: 'success', message: 'PDF file exported successfully!' });
@@ -72,6 +111,21 @@ const ExportOptions = ({ elementRef, surah, startAyah, endAyah, width, backgroun
   
   return (
     <div className="export-options bg-white p-6 rounded-lg shadow-md">
+      {/* Hidden export wrapper - this will be used for exports */}
+      <div style={{ position: 'absolute', left: '-9999px', top: '-9999px', opacity: 0, pointerEvents: 'none' }}>
+        <ExportWrapper
+          fontFamily={settings?.fontFamily}
+          fontSize={settings?.fontSize}
+          textColor={settings?.textColor}
+          backgroundColor={settings?.backgroundColor}
+          backgroundOpacity={backgroundOpacity}
+          textAlign="center"
+          width={width}
+        >
+          <div ref={exportWrapperRef}></div>
+        </ExportWrapper>
+      </div>
+      
       <h3 className="text-lg font-medium mb-3">Export Options</h3>
       
       <div className="flex flex-col space-y-2">

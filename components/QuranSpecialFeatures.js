@@ -72,7 +72,7 @@ const QuranSpecialFeatures = ({
   // Bismillah preview with proper styling
   const BismillahPreview = ({ style }) => (
     <RTLTextContainer
-      fontFamily={settings.fontFamily || 'KFGQPC Uthmanic Script HAFS'}
+      fontFamily={settings.fontFamily || 'Uthmanic_Hafs_1'}
       fontSize={24}
       textAlign="center"
       className="my-2 p-3 border border-gray-200 rounded-md"

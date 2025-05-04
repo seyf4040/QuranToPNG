@@ -18,7 +18,7 @@ export default function QuranDisplayGenerator() {
   // State for selected content
   const [selectedSurah, setSelectedSurah] = useState(null);
   const [ayahText, setAyahText] = useState('');
-  
+
   // State for user settings
   const [settings, setSettings] = useState({
     // Selection settings
@@ -27,7 +27,7 @@ export default function QuranDisplayGenerator() {
     endAyah: 1,
     
     // Display settings
-    fontFamily: 'KFGQPC Uthmanic Script HAFS',
+    fontFamily: 'Uthmanic_Hafs_1', // Set default to match fonts.json first entry
     fontSize: 32,
     textColor: '#000000',
     backgroundColor: '#ffffff',
@@ -140,6 +140,7 @@ export default function QuranDisplayGenerator() {
                   endAyah={settings.endAyah}
                   width={settings.width}
                   backgroundOpacity={settings.backgroundOpacity}
+                  settings={settings} // Pass all settings for export
                 />
               </div>
             </div>

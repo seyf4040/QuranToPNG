@@ -35,7 +35,7 @@ const RTLTextContainer = ({
   // Create combined styles
   const combinedStyles = {
     direction: 'rtl',
-    fontFamily: fontFamily || 'KFGQPC Uthmanic Script HAFS',
+    fontFamily: fontFamily || 'Uthmanic_Hafs_1',
     fontSize: fontSize ? `${fontSize}px` : '32px',
     color: textColor || '#000000',
     backgroundColor: backgroundOpacity === 0 ? 'transparent' 

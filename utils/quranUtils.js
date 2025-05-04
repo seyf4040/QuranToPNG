@@ -2,6 +2,11 @@
 import { toPng, toSvg } from 'html-to-image';
 import { jsPDF } from 'jspdf';
 
+// Import the enhanced export utilities
+import exportEnhancer from './exportEnhancer';
+import fontExportHelper from './fontExportHelper';
+
+
 /**
  * Fetch Quran data from API or local JSON
  * Can be extended to use an external API instead of local JSON
@@ -55,21 +60,58 @@ export const getAyahsFromSurah = (surah, startAyah, endAyah) => {
 
 /**
  * Export functions for different file formats
+ * With improved font handling
  */
 export const exportFunctions = {
   toPNG: async (elementRef, options) => {
     if (!elementRef.current) return null;
     
     try {
-      const dataUrl = await toPng(elementRef.current, { 
+      // Store original styles
+      const originalStyles = elementRef.current.style.cssText;
+      
+      // Preload the font to ensure it's available
+      await fontExportHelper.preloadFontForExport(options.fontFamily);
+      
+      // Get font CSS for embedding
+      const fontCSS = await fontExportHelper.getFontEmbedCSS();
+      
+      // Configure export options
+      const exportOptions = {
         backgroundColor: options.backgroundOpacity === 0 ? 'transparent' : undefined,
         width: options.width,
+        height: elementRef.current.offsetHeight,
         style: {
-          transform: 'scale(2)', // Higher resolution
-          transformOrigin: 'top left',
-          width: `${options.width}px`
-        }
-      });
+          margin: '0 auto',
+          fontFamily: options.fontFamily,
+        },
+        fontEmbedCSS: fontCSS,
+        pixelRatio: 2, // Higher quality
+        skipFonts: false, // Important: don't skip fonts
+      };
+      
+      // Apply temporary styles to ensure proper text rendering
+      elementRef.current.style.cssText = `
+        width: ${options.width}px !important;
+        font-family: ${options.fontFamily} !important;
+        font-size: ${options.fontSize}px !important;
+        color: ${options.textColor} !important;
+        text-align: ${options.textAlign} !important;
+        direction: rtl !important;
+        line-height: 1.8 !important;
+        padding: 20px !important;
+        margin: 0 auto !important;
+        display: block !important;
+      `;
+      
+      // Import html-to-image dynamically
+      const { toPng } = await import('html-to-image');
+      
+      // Generate the PNG
+      const dataUrl = await toPng(elementRef.current, exportOptions);
+      
+      // Restore original styles
+      elementRef.current.style.cssText = originalStyles;
       
       return dataUrl;
     } catch (error) {
@@ -82,13 +124,50 @@ export const exportFunctions = {
     if (!elementRef.current) return null;
     
     try {
-      const dataUrl = await toSvg(elementRef.current, { 
+      // Store original styles
+      const originalStyles = elementRef.current.style.cssText;
+      
+      // Preload the font to ensure it's available
+      await fontExportHelper.preloadFontForExport(options.fontFamily);
+      
+      // Get font CSS for embedding
+      const fontCSS = await fontExportHelper.getFontEmbedCSS();
+      
+      // Configure export options for SVG
+      const exportOptions = {
         backgroundColor: options.backgroundOpacity === 0 ? 'transparent' : undefined,
         width: options.width,
+        height: elementRef.current.offsetHeight,
         style: {
-          width: `${options.width}px`
-        }
-      });
+          margin: '0 auto',
+          fontFamily: options.fontFamily,
+        },
+        fontEmbedCSS: fontCSS,
+        skipFonts: false, // Important: don't skip fonts
+      };
+      
+      // Apply temporary styles to ensure proper text rendering
+      elementRef.current.style.cssText = `
+        width: ${options.width}px !important;
+        font-family: ${options.fontFamily} !important;
+        font-size: ${options.fontSize}px !important;
+        color: ${options.textColor} !important;
+        text-align: ${options.textAlign} !important;
+        direction: rtl !important;
+        line-height: 1.8 !important;
+        padding: 20px !important;
+        margin: 0 auto !important;
+        display: block !important;
+      `;
+      
+      // Import html-to-image dynamically
+      const { toSvg } = await import('html-to-image');
+      
+      // Generate the SVG
+      const dataUrl = await toSvg(elementRef.current, exportOptions);
+      
+      // Restore original styles
+      elementRef.current.style.cssText = originalStyles;
       
       return dataUrl;
     } catch (error) {
@@ -101,26 +180,64 @@ export const exportFunctions = {
     if (!elementRef.current) return null;
     
     try {
-      // First convert to PNG
-      const pngData = await toPng(elementRef.current, { 
+      // Store original styles
+      const originalStyles = elementRef.current.style.cssText;
+      
+      // Preload the font to ensure it's available
+      await fontExportHelper.preloadFontForExport(options.fontFamily);
+      
+      // Configure export options
+      const exportOptions = {
         backgroundColor: options.backgroundOpacity === 0 ? 'white' : undefined, // PDFs need background
         width: options.width,
+        height: elementRef.current.offsetHeight,
         style: {
-          transform: 'scale(2)',
-          transformOrigin: 'top left',
-          width: `${options.width}px`
-        }
-      });
+          margin: '0 auto',
+          fontFamily: options.fontFamily,
+        },
+        pixelRatio: 2, // Higher quality
+      };
+      
+      // Apply temporary styles to ensure proper text rendering
+      elementRef.current.style.cssText = `
+        width: ${options.width}px !important;
+        font-family: ${options.fontFamily} !important;
+        font-size: ${options.fontSize}px !important;
+        color: ${options.textColor} !important;
+        text-align: ${options.textAlign} !important;
+        direction: rtl !important;
+        line-height: 1.8 !important;
+        padding: 20px !important;
+        margin: 0 auto !important;
+        display: block !important;
+      `;
+      
+      // Import html-to-image dynamically
+      const { toPng } = await import('html-to-image');
+      
+      // First convert to PNG
+      const pngData = await toPng(elementRef.current, exportOptions);
+      
+      // Restore original styles
+      elementRef.current.style.cssText = originalStyles;
+      
+      // Calculate PDF dimensions
+      const height = elementRef.current.offsetHeight;
+      const width = options.width;
+      
+      // Import jsPDF dynamically
+      const { jsPDF } = await import('jspdf');
       
       // Create PDF with appropriate dimensions
       const pdf = new jsPDF({
-        orientation: options.width > elementRef.current.offsetHeight * 2 ? 'landscape' : 'portrait',
+        orientation: width > height ? 'landscape' : 'portrait',
         unit: 'px',
-        format: [options.width, elementRef.current.offsetHeight * 2]
+        format: [width, height]
       });
       
       // Add the image to the PDF
-      pdf.addImage(pngData, 'PNG', 0, 0, options.width, elementRef.current.offsetHeight * 2);
+      pdf.addImage(pngData, 'PNG', 0, 0, width, height);
+      
       return pdf;
     } catch (error) {
       console.error('Error exporting PDF:', error);
@@ -131,8 +248,89 @@ export const exportFunctions = {
 
 /**
  * Get available Quranic fonts
+ * Now dynamically loads fonts from the fonts.json file
+ * @returns {Promise<Array>} Promise resolving to array of font objects
  */
-export const getQuranicFonts = () => {
+export const getQuranicFonts = async () => {
+  try {
+    // Attempt to fetch fonts from the JSON file
+    if (typeof window !== 'undefined') {
+      const response = await fetch('/fonts/fonts.json');
+      
+      if (!response.ok) {
+        throw new Error('Failed to load fonts configuration');
+      }
+      
+      const fontData = await response.json();
+      
+      // Transform the font data to include additional information
+      return fontData.map(font => ({
+        name: font.name,
+        style: font.label || font.name,
+        file: font.file,
+        isSpecialized: font.name.includes('Uthmanic') || 
+                      font.name.includes('Quran') || 
+                      font.name.includes('Kufi')
+      }));
+    }
+    
+    // Fallback for server-side rendering or if fetch fails
+    throw new Error('Cannot fetch fonts on server or fetch failed');
+  } catch (error) {
+    console.warn('Error loading fonts from JSON:', error);
+    // Return default fonts as fallback
+    return [
+      {
+        name: 'KFGQPC Uthmanic Script HAFS',
+        style: 'Traditional Uthmani script used in many Quran prints',
+        isSpecialized: true
+      },
+      {
+        name: 'Uthmanic_Hafs_1',
+        style: 'Hafs (small)',
+        isSpecialized: true
+      },
+      {
+        name: 'Uthmanic_Hafs_2',
+        style: 'Hafs (big)',
+        isSpecialized: true
+      },
+      {
+        name: 'Uthmanic_Warsh_1',
+        style: 'Warsh',
+        isSpecialized: true
+      },
+      {
+        name: 'Kufi Style',
+        style: 'Kufi Style',
+        isSpecialized: true
+      },
+      {
+        name: 'Amiri Quran',
+        style: 'Classical Naskh style font optimized for Quran',
+        isSpecialized: true
+      },
+      {
+        name: 'Scheherazade New',
+        style: 'Modern Arabic font with good readability',
+        isSpecialized: false
+      },
+      {
+        name: 'Noto Naskh Arabic',
+        style: 'Google\'s Arabic Naskh font with wide coverage',
+        isSpecialized: false
+      }
+    ];
+  }
+};
+
+/**
+ * Synchronous version of getQuranicFonts for use in components
+ * that can't use async/await directly in render functions
+ * @returns {Array} Array of font objects
+ */
+export const getQuranicFontsSync = () => {
+  // Default fonts to use initially before async load completes
   return [
     {
       name: 'KFGQPC Uthmanic Script HAFS',
@@ -140,23 +338,18 @@ export const getQuranicFonts = () => {
       isSpecialized: true
     },
     {
-      name: 'Amiri Quran',
-      style: 'Classical Naskh style font optimized for Quran',
+      name: 'Uthmanic_Hafs_1',
+      style: 'Hafs (small)',
       isSpecialized: true
     },
     {
-      name: 'Scheherazade New',
-      style: 'Modern Arabic font with good readability',
-      isSpecialized: false
+      name: 'Uthmanic_Hafs_2',
+      style: 'Hafs (big)',
+      isSpecialized: true
     },
     {
-      name: 'Noto Naskh Arabic',
-      style: 'Google\'s Arabic Naskh font with wide coverage',
-      isSpecialized: false
-    },
-    {
-      name: 'Me Quran',
-      style: 'Specialized font for Quranic text with tajweed marks',
+      name: 'Uthmanic_Warsh_1',
+      style: 'Warsh',
       isSpecialized: true
     }
   ];
@@ -202,3 +395,5 @@ export const getExportFilename = (surah, startAyah, endAyah) => {
   const surahName = surah.transliteration.toLowerCase().replace(/\s+/g, '-');
   return `quran-${surahName}-${startAyah}${startAyah !== endAyah ? `-${endAyah}` : ''}`;
 };
+
+

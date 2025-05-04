@@ -12,17 +12,34 @@ const FontLoader = () => {
       
       {/* Custom font definitions for specialized Quranic fonts */}
       <style jsx global>{`
+        
         @font-face {
-          font-family: 'KFGQPC Uthmanic Script HAFS';
-          src: url('/fonts/UthmanicHafs.ttf') format('truetype');
+          font-family: 'Uthmanic_Hafs_1';
+          src: url('/fonts/uthmanic_hafs_v22.ttf') format('truetype');
           font-weight: normal;
           font-style: normal;
           font-display: swap;
         }
         
         @font-face {
-          font-family: 'Me Quran';
-          src: url('/fonts/me_quran.ttf') format('truetype');
+          font-family: 'Uthmanic_Hafs_2';
+          src: url('/fonts/UthmanicHafs_V22.ttf') format('truetype');
+          font-weight: normal;
+          font-style: normal;
+          font-display: swap;
+        }
+        
+        @font-face {
+          font-family: 'Uthmanic_Warsh_1';
+          src: url('/fonts/UthmanicWarsh_V21.ttf') format('truetype');
+          font-weight: normal;
+          font-style: normal;
+          font-display: swap;
+        }
+        
+        @font-face {
+          font-family: 'Kufi Style';
+          src: url('/fonts/KFGQPC-KufiStyV14.ttf') format('truetype');
           font-weight: normal;
           font-style: normal;
           font-display: swap;
@@ -62,11 +79,10 @@ const FontLoader = () => {
           // Simple font loading detection
           if ("fonts" in document) {
             Promise.all([
-              document.fonts.load("1em 'Amiri'"),
-              document.fonts.load("1em 'Noto Naskh Arabic'"),
-              document.fonts.load("1em 'Scheherazade New'"),
-              document.fonts.load("1em 'KFGQPC Uthmanic Script HAFS'"),
-              document.fonts.load("1em 'Me Quran'")
+              document.fonts.load("1em 'Uthmanic_Hafs_1'"),
+              document.fonts.load("1em 'Uthmanic_Hafs_2'"),
+              document.fonts.load("1em 'Uthmanic_Warsh_1'"),
+              document.fonts.load("1em 'Kufi Style'")
             ]).then(() => {
               document.body.classList.add('fonts-loaded');
             }).catch(err => {
