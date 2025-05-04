@@ -1,0 +1,23 @@
+[
+    {
+      "name": "Uthmanic_Hafs_1",
+      "file": "/fonts/uthmanic_hafs_v22.ttf",
+      "label": "Hafs (small)"
+    },
+    {
+        "name": "Uthmanic_Hafs_2",
+        "file": "/fonts/UthmanicHafs_V22.ttf",
+        "label": "Hafs (big)"
+    },
+    {
+        "name": "Uthmanic_Warsh_1",
+        "file": "/fonts/UthmanicWarsh_V21.ttf",
+        "label": "Warsh"
+    },
+    {
+        "name": "Kufi Style",
+        "file": "/fonts/KFGQPC-KufiStyV14.ttf",
+        "label": "Kufi Style"
+    }
+  ]
+  
