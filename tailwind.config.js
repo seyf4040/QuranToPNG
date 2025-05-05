@@ -16,7 +16,7 @@ module.exports = {
       },
       fontFamily: {
         // Add fallback fonts for Arabic text
-        'arabic': ['KFGQPC Uthmanic Script HAFS', 'Amiri', 'Scheherazade New', 'Noto Naskh Arabic', 'Arial', 'sans-serif'],
+        'arabic': ['KFGQPC Uthmanic Script HAFS', 'Arial', 'sans-serif'],
       },
       boxShadow: {
         // Special shadow for Quranic text elements

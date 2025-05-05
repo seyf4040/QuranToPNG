@@ -18,7 +18,7 @@ export default function QuranDisplayGenerator() {
   // State for selected content
   const [selectedSurah, setSelectedSurah] = useState(null);
   const [ayahText, setAyahText] = useState('');
-
+  
   // State for user settings
   const [settings, setSettings] = useState({
     // Selection settings
@@ -27,13 +27,14 @@ export default function QuranDisplayGenerator() {
     endAyah: 1,
     
     // Display settings
-    fontFamily: 'Uthmanic_Hafs_1', // Set default to match fonts.json first entry
+    fontFamily: 'Uthmanic_Hafs_1',
     fontSize: 32,
     textColor: '#000000',
     backgroundColor: '#ffffff',
     backgroundOpacity: 0,
     width: 800,
     textAlign: 'center',
+    customAyahNumberColor: undefined, // Custom color for ayah numbers
   });
   
   const previewRef = useRef(null);
@@ -140,7 +141,6 @@ export default function QuranDisplayGenerator() {
                   endAyah={settings.endAyah}
                   width={settings.width}
                   backgroundOpacity={settings.backgroundOpacity}
-                  settings={settings} // Pass all settings for export
                 />
               </div>
             </div>
@@ -160,6 +160,9 @@ export default function QuranDisplayGenerator() {
                     backgroundOpacity={settings.backgroundOpacity}
                     textAlign={settings.textAlign}
                     width={settings.width}
+                    customAyahNumberColor={settings.customAyahNumberColor}
+                    surahNumber={selectedSurah ? selectedSurah.id : null}
+                    startAyah={settings.startAyah}
                   />
                 </div>
               </div>

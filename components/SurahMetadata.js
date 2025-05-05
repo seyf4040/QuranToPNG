@@ -120,8 +120,8 @@ function getSurahInfo(surahNumber) {
   const defaultInfo = {
     revelationOrder: "N/A",
     juzNumbers: surahNumber <= 10 ? [1] : surahNumber >= 78 ? [30] : [Math.ceil(surahNumber / 4)],
-    mainTheme: "Various Islamic teachings",
-    period: surahNumber <= 86 ? "Meccan" : "Medinan",
+    mainTheme: "Various",
+    period: "N/A",
     description: "This surah contains important guidance and teachings from the Quran. For detailed information, please consult scholarly resources."
   };
   
